@@ -31,7 +31,8 @@ def check_power_server():
         print("Failed to create socket")
         sys.exit()
 
-    host = "localhost" # debugging
+    #host = "localhost" # debugging
+    host = "PiServer"
     port = 7444
 
     try:
