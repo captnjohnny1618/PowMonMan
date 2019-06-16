@@ -18,7 +18,8 @@ class udp_receiver:
 
     def __next__(self):
         try:
-            addr,data = self.sock.recvfrom(self.msg_leng)
+            
+            data, addr = self.sock.recvfrom(self.msg_leng)
             data = data.decode('utf-8')
             return addr, data
         except Exception as e:

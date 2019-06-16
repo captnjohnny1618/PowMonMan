@@ -28,11 +28,11 @@ class PowMonManClient:
                   "    Current power status: {}".format(self.checkPowerState()))
               
     def listenForServer(self):
-        # Add UDP discovery code
         print("Listening for PowMonMan server...",end="",flush=True)
         packets_received = 0
-        with udp_receiver(udp_port_number) as ur:
+        with udp_receiver(self.udp_port_number) as ur:
             for (address,data) in ur:
+                address = address[0] # chop off port number
                 print(".",end="",flush=True)
                 if data == "PowMonMan Server!":
                     print("Found! ({})".format(address))
@@ -50,7 +50,6 @@ class PowMonManClient:
                           "if PowMonMan is not functioning correctly.\n")
                     return address
         return []
-        #return("192.168.3.106")
 
     def checkPowerState(self):
         try:
