@@ -1,6 +1,7 @@
 import sys
 import os
 import _thread
+from udp import udp_broadcaster
 #from threading import Thread
 
 import socket
@@ -47,4 +48,12 @@ def main():
         s.close()
 
 if __name__=="__main__":
+
+    port_number = 7444
+    udp_port_number = port_number-1
+
+    while True:
+        with udp_broadcaster(udp_port_number,"PowMonMan Server!"):
+            print("Broadcasting server identification packet...")
+
     main();

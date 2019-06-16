@@ -5,10 +5,12 @@ import daemon
 
 import socket
 from timer import shutdown_timer
+from udp import udp_receiver
 
 class PowMonManClient:
 
-    port_number = 7444;
+    port_number = 7444
+    udp_port_number = port_number-1
     server_ip = [];
     timer = shutdown_timer()
     shutdown_time = 10 #600 
@@ -27,7 +29,28 @@ class PowMonManClient:
               
     def listenForServer(self):
         # Add UDP discovery code
-        return("192.168.3.106")
+        print("Listening for PowMonMan server...",end="",flush=True)
+        packets_received = 0
+        with udp_receiver(udp_port_number) as ur:
+            for (address,data) in ur:
+                print(".",end="",flush=True)
+                if data == "PowMonMan Server!":
+                    print("Found! ({})".format(address))
+                    return address
+                else:
+                    continue
+                    
+                packets_received+=1
+                
+                if packets_received>10:
+                    print("")
+                    print("Receiving packets, however they're not what I expect...\n" + 
+                          "Guessing that the server address is {}\n".format(address) +
+                          "however this may be incorrect.  Double check server configuration\n" +
+                          "if PowMonMan is not functioning correctly.\n")
+                    return address
+        return []
+        #return("192.168.3.106")
 
     def checkPowerState(self):
         try:
