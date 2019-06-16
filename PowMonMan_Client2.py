@@ -45,15 +45,15 @@ class PowMonManClient:
             return("error connecting")
 
     def sendShutdownSignal(self):
-        # Add platform-specific shutdown commands        
         print("SHUTDOWN INITIATED")
-        if windows:
-            pass
-        if linux:
-            pass
-        if mac:
-            pass
-                
+        
+        if sys.platform in ["darwin","linux"]:
+            cmd = "sudo shutdown -h now"
+        if sys.platform in ["win32"]:
+            cmd = "shutdown /s"
+
+        from subprocess import call        
+        call(cmd.split())
         sys.exit(0);
 
     def run(self):
