@@ -2,58 +2,51 @@ import sys
 import os
 import _thread
 from udp import udp_broadcaster
-#from threading import Thread
-
 import socket
+import daemon
+import time
 
-def client_thread(conn):
-    # check pin status
-    pin_status = os.path.isfile("ON");
-    
-    if pin_status:
-        conn.sendall(bytes("true",'utf-8'))
-    else:
-        conn.sendall(bytes("false",'utf-8'))
-    conn.close()        
-
-def main():
-
-    HOST = ''    # Symbolic name, meaning all available interfaces
-    PORT = 7444    # Arbitrary non-privileged port
-
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        print('Socket created')
-     
-        #Bind socket to local host and port
-        try:
-            s.bind((HOST, PORT))
-        except socket.error as msg:
-            print('Bind failed. Error Code : ' + str(msg[0]) + ' Message ' + msg[1])
-            sys.exit()
-        
-            print('Socket bind complete')
-     
-            #Start listening on socket
-        s.listen(10)
-        print('Socket now [el for el in list]stening')
-     
-        #now keep talking with the client
-        while True:
-            #wait to accept a connection - blocking call
-            conn, addr = s.accept()        
-            print('Connected with ' + addr[0] + ':' + str(addr[1]))
-     
-            _thread.start_new_thread(client_thread,(conn,))
-     
-        s.close()
-
-if __name__=="__main__":
-
+class PowMonManServer:
     port_number = 7444
     udp_port_number = port_number-1
 
-    while True:
-        with udp_broadcaster(udp_port_number,"PowMonMan Server!"):
-            print("Broadcasting server identification packet...")
+    def handleRequests(self):
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            try:
+                s.bind(('', self.port_number))
+            except socket.error as msg:
+                print('Bind failed. Error Code : ' + str(msg[0]) + ' Message ' + msg[1])
+                sys.exit()
 
-    main();
+            s.listen(10)
+            
+            while True:                
+                conn, addr = s.accept() # blocking call (waits for connection)
+                print('Connected with ' + addr[0] + ':' + str(addr[1]))
+                _thread.start_new_thread(self.clientThread,(conn,))
+                
+            s.close()
+    
+    def udpBroadcastThread(self):
+        while True:
+            with udp_broadcaster(self.udp_port_number,"PowMonMan Server!"):
+                pass
+            time.sleep(5)
+
+    def clientThread(self,conn):
+        pin_status = os.path.isfile("/Users/johnhoffman/Code/PowMonMan/ON");
+        
+        if pin_status:
+            conn.sendall(bytes("on",'utf-8'))
+        else:
+            conn.sendall(bytes("off",'utf-8'))
+        conn.close()        
+                
+    def run(self):
+        _thread.start_new_thread(self.udpBroadcastThread,())
+        self.handleRequests()
+
+if __name__=="__main__":    
+    with daemon.DaemonContext(stdout=sys.stdout,stderr = sys.stderr):
+        P = PowMonManServer()
+        P.run()

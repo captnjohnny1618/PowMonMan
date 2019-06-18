@@ -1,89 +1,110 @@
 import sys
-import daemon
+import os
 import time
+import daemon
 
-import datetime
 import socket
+from timer import shutdown_timer
+from udp import udp_receiver
 
-class shutdown_timer:
-    is_timing = False
-    start_time = datetime.datetime.now()
+class PowMonManClient:
+
+    port_number = 7444
+    udp_port_number = port_number-1
+    server_ip = [];
+    timer = shutdown_timer()
+    shutdown_time = 10 #600 
+    poll_rate = 5
     
-    def start(self):
-        self.is_timing = True
-        self.start_time = datetime.datetime.now()
-        
-    def stop(self):
-        self.is_timing = False
-
-    def get_elapsed(self):
-        if self.is_timing:
-            elapsed = (datetime.datetime.now() - self.start_time).total_seconds()
+    def __init__(self):
+        print("Starting PowMonMan_Client...")              
+        self.server_ip = self.listenForServer()              
+        if not self.server_ip:
+            print("Could not find a server on the network!")
         else:
-            elapsed = -1            
-        return elapsed
-    
-def check_power_server():
-    # Open socket    
-    try:
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    except Exception as e:
-        print("Failed to create socket")
-        sys.exit()
-
-    #host = "localhost" # debugging
-    host = "PiServer"
-    port = 7444
-
-    try:
-        remote_ip = socket.gethostbyname(host)
-    except socket.gaierror:
-        print('Hostname could not be resolved. Exiting')
-        sys.exit()
-        
-    #print('Ip address of ' + host + ' is ' + remote_ip)
-
-    s.connect((remote_ip,port))
-    data = s.recv(4096);
-    return data.decode("utf-8")
-    
-def do_something():
-    shutdown_time = 30;
-    t = shutdown_timer();
-    prev_power_state = True
-    power_state = True
-
-    while True:
-        
-        power_state = check_power_server()
-
-        # Power has switched
-        if power_state != prev_power_state:        
-            if power_state == "true":
-                increment = 5;
-                t.stop()
-            elif power_state == "false":
-                t.start()
-                increment = 1;
-            else:
-                print("ERROR received incorrectly formatted data from power server")
-                increment = 5;
-
-        else:
-            if power_state == "false":
-                elapsed = t.get_elapsed()
-                if  elapsed > shutdown_time:
-                    cmd = "sudo shutdown -h now"
-                    print(cmd)
+            print("    Server found at:      {}\n".format(self.server_ip) + 
+                  "    Using port:           {}\n".format(self.port_number) + 
+                  "    Shutdown time (sec):  {}\n".format(self.shutdown_time) + 
+                  "    Current power status: {}".format(self.checkPowerState()))
+              
+    def listenForServer(self):
+        print("Listening for PowMonMan server...",end="",flush=True)
+        packets_received = 0
+        with udp_receiver(self.udp_port_number) as ur:
+            for (address,data) in ur:
+                address = address[0] # chop off port number
+                print(".",end="",flush=True)
+                if data == "PowMonMan Server!":
+                    print("Found! ({})".format(address))
+                    return address
                 else:
-                    print("{} seconds until shutdown!".format(shutdown_time-elapsed))
+                    continue
+                    
+                packets_received+=1
+                
+                if packets_received>10:
+                    print("")
+                    print("Receiving packets, however they're not what I expect...\n" + 
+                          "Guessing that the server address is {}\n".format(address) +
+                          "however this may be incorrect.  Double check server configuration\n" +
+                          "if PowMonMan is not functioning correctly.\n")
+                    return address
+        return []
 
-        prev_power_state = power_state;
-        time.sleep(increment)
+    def checkPowerState(self):
+        try:
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        except Exception as e:
+            print("Failed to create socket")
+            sys.exit()
+            
+        try:
+            s.connect((self.server_ip,self.port_number))
+            data = s.recv(4096)
+            return(data.decode("utf-8"))
+        except:
+            print("Unable to connect to server.")
+            return("error connecting")
 
-def run():
-    with daemon.DaemonContext(stdout = sys.stdout,stderr = sys.stderr):
-        do_something()
+    def sendShutdownSignal(self):
+        print("SHUTDOWN INITIATED")
+        
+        if sys.platform in ["darwin","linux"]:
+            cmd = "sudo shutdown -h now"
+        if sys.platform in ["win32"]:
+            cmd = "shutdown /s"
 
-if __name__ == "__main__":
-    run()
+        from subprocess import call        
+        call(cmd.split())
+        sys.exit(0);
+
+    def run(self):
+        power_state      = "on"
+        prev_power_state = "on"
+
+        while True:
+            
+            power_state = self.checkPowerState()
+            print(power_state)
+            
+            if (power_state != prev_power_state) and (power_state=="on"):
+                self.poll_rate = 5
+                self.timer.stop()
+            elif (power_state != prev_power_state) and (power_state=="off"):
+                self.poll_rate = 1
+                self.timer.start()
+            elif (power_state == prev_power_state) and (power_state=="off"):
+                elapsed = self.timer.get_elapsed()
+                if elapsed > self.shutdown_time:
+                    self.sendShutdownSignal()
+                else:
+                    print("{} seconds until shutdown!".format(round(self.shutdown_time - elapsed)))
+
+            prev_power_state = power_state
+            time.sleep(self.poll_rate)
+
+if __name__=="__main__":
+
+    with daemon.DaemonContext(stdout = sys.stdout, stderr = sys.stderr):
+        P = PowMonManClient();
+        P.run()
