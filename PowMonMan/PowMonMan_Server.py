@@ -46,7 +46,11 @@ class PowMonManServer:
         _thread.start_new_thread(self.udpBroadcastThread,())
         self.handleRequests()
 
-if __name__=="__main__":    
+
+def main():
     with daemon.DaemonContext(stdout=sys.stdout,stderr = sys.stderr):
         P = PowMonManServer()
         P.run()
+    
+if __name__=="__main__":    
+    main()

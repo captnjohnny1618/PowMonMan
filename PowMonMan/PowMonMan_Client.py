@@ -103,8 +103,10 @@ class PowMonManClient:
             prev_power_state = power_state
             time.sleep(self.poll_rate)
 
-if __name__=="__main__":
-
+def main():
     with daemon.DaemonContext(stdout = sys.stdout, stderr = sys.stderr):
         P = PowMonManClient();
         P.run()
+
+if __name__=="__main__":
+    main()
