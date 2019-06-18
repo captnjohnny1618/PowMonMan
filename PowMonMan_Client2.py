@@ -85,6 +85,7 @@ class PowMonManClient:
         while True:
             
             power_state = self.checkPowerState()
+            print(power_state)
             
             if (power_state != prev_power_state) and (power_state=="on"):
                 self.poll_rate = 5

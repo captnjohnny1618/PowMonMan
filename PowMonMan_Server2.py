@@ -4,6 +4,7 @@ import _thread
 from udp import udp_broadcaster
 import socket
 import daemon
+import time
 
 class PowMonManServer:
     port_number = 7444
@@ -32,17 +33,18 @@ class PowMonManServer:
                 pass
             time.sleep(5)
 
-    def clientThread(conn):
-        pin_status = os.path.isfile("ON");        
+    def clientThread(self,conn):
+        pin_status = os.path.isfile("/Users/johnhoffman/Code/PowMonMan/ON");
+        
         if pin_status:
-            conn.sendall(bytes("true",'utf-8'))
+            conn.sendall(bytes("on",'utf-8'))
         else:
-            conn.sendall(bytes("false",'utf-8'))
+            conn.sendall(bytes("off",'utf-8'))
         conn.close()        
                 
     def run(self):
-        _thread.start_new_thread(self.udpBroadcastThread,())        
-        handleRequests()
+        _thread.start_new_thread(self.udpBroadcastThread,())
+        self.handleRequests()
 
 if __name__=="__main__":    
     with daemon.DaemonContext(stdout=sys.stdout,stderr = sys.stderr):
