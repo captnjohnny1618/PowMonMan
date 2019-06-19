@@ -4,8 +4,8 @@ import time
 import daemon
 
 import socket
-from timer import shutdown_timer
-from udp import udp_receiver
+from .timer import shutdown_timer
+from .udp import udp_receiver
 
 class PowMonManClient:
 

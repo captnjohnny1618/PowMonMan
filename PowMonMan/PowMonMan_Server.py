@@ -1,7 +1,7 @@
 import sys
 import os
 import _thread
-from udp import udp_broadcaster
+from .udp import udp_broadcaster
 import socket
 import daemon
 import time

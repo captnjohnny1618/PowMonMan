@@ -19,6 +19,8 @@ setup(
         "python-version>'3.0'",
         "python-daemon>=1"
     ],
+    
+    packages = find_packages(),
 
     entry_points = {
         "console_scripts":[
