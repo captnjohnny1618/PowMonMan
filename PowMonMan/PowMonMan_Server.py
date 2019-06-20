@@ -28,13 +28,20 @@ class PowMonManServer:
             s.close()
     
     def udpBroadcastThread(self):
+        is_broadcasting = False
+        print("Starting UDP broadcast...")
         while True:
             with udp_broadcaster(self.udp_port_number,"PowMonMan Server!"):
                 pass
+            if not is_broadcasting:
+                is_broadcasting = True
+                print("UDP broadcasts: running")
             time.sleep(5)
 
     def clientThread(self,conn):
-        pin_status = os.path.isfile("/Users/johnhoffman/Code/PowMonMan/ON");
+        #pin_status = os.path.isfile("/Users/johnhoffman/Code/PowMonMan/ON");
+        filepath = "/var/local/PowMonMan/ON"
+        pin_status = os.path.isfile(filepath);
         
         if pin_status:
             conn.sendall(bytes("on",'utf-8'))
