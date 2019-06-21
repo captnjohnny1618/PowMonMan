@@ -5,6 +5,15 @@ from .udp import udp_broadcaster
 import socket
 import daemon
 import time
+import logging
+
+def makeDirIfDoesntExist(dirpath):
+    try:
+        # Create target Directory
+        os.mkdir(dirpath)
+        print("Directory " , dirpath ,  " Created ") 
+    except FileExistsError:
+        print("Directory " , dirpath ,  " already exists")
 
 class PowMonManServer:
     port_number = 7444
@@ -15,14 +24,14 @@ class PowMonManServer:
             try:
                 s.bind(('', self.port_number))
             except socket.error as msg:
-                print('Bind failed. Error Code : ' + str(msg[0]) + ' Message ' + msg[1])
+                self.logger.error('Bind failed. Error Code : ' + str(msg[0]) + ' Message ' + msg[1])
                 sys.exit()
 
             s.listen(10)
             
             while True:                
                 conn, addr = s.accept() # blocking call (waits for connection)
-                print('Connected with ' + addr[0] + ':' + str(addr[1]))
+                self.logger.info('Connected with ' + addr[0] + ':' + str(addr[1]))
                 _thread.start_new_thread(self.clientThread,(conn,))
                 
             s.close()
@@ -34,7 +43,7 @@ class PowMonManServer:
             time.sleep(5)
 
     def clientThread(self,conn):
-        pin_status = os.path.isfile("/Users/johnhoffman/Code/PowMonMan/ON");
+        pin_status = os.path.isfile("/var/local/PowMonMan/ON");
         
         if pin_status:
             conn.sendall(bytes("on",'utf-8'))
@@ -47,9 +56,29 @@ class PowMonManServer:
         self.handleRequests()
 
 
+    def startLogging(self):
+        logdir_path = '/var/log/PowMonMan/'
+        logfile_path = '/var/log/PowMonMan/server.log'
+
+        makeDirIfDoesntExist(logdir_path)
+        
+        if not os.path.isfile(logfile_path):
+            try:
+                Path(logfile_path).touch()
+            except Exception as e:
+                print("Could not open logfile. Are you running with root permissions?")
+
+        self.logger = logging.getLogger('server')
+        hdlr = logging.FileHandler(logfile_path)
+        formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
+        hdlr.setFormatter(formatter)
+        self.logger.addHandler(hdlr)
+        self.logger.setLevel(logging.INFO)
+
 def main():
     with daemon.DaemonContext(stdout=sys.stdout,stderr = sys.stderr):
         P = PowMonManServer()
+        P.startLogging()
         P.run()
     
 if __name__=="__main__":    
