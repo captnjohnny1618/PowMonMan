@@ -2,18 +2,11 @@ import sys
 import os
 import _thread
 from .udp import udp_broadcaster
+from .filehandling import makeDirIfDoesntExist, makeFileIfDoesntExist, writePermissionsCheck
 import socket
 import daemon
 import time
 import logging
-
-def makeDirIfDoesntExist(dirpath):
-    try:
-        # Create target Directory
-        os.mkdir(dirpath)
-        print("Directory " , dirpath ,  " Created ") 
-    except FileExistsError:
-        print("Directory " , dirpath ,  " already exists")
 
 class PowMonManServer:
     port_number = 7444
@@ -61,12 +54,8 @@ class PowMonManServer:
         logfile_path = '/var/log/PowMonMan/server.log'
 
         makeDirIfDoesntExist(logdir_path)
-        
-        if not os.path.isfile(logfile_path):
-            try:
-                Path(logfile_path).touch()
-            except Exception as e:
-                print("Could not open logfile. Are you running with root permissions?")
+        makeFileIfDoesntExist(logfile_path)
+        writePermissionsCheck(logfile_path)
 
         self.logger = logging.getLogger('server')
         hdlr = logging.FileHandler(logfile_path)

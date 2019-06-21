@@ -6,17 +6,10 @@ import daemon
 import socket
 from .timer import shutdown_timer
 from .udp import udp_receiver
+from .filehandling import makeDirIfDoesntExist, makeFileIfDoesntExist, writePermissionsCheck
 
 from pathlib import Path
 import logging
-
-def makeDirIfDoesntExist(dirpath):
-    try:
-        # Create target Directory
-        os.mkdir(dirpath)
-        print("Directory " , dirpath ,  " Created ") 
-    except FileExistsError:
-        print("Directory " , dirpath ,  " already exists")
 
 class PowMonManClient:
 
@@ -120,13 +113,9 @@ class PowMonManClient:
         logdir_path = '/var/log/PowMonMan/'
         logfile_path = '/var/log/PowMonMan/client.log'
 
-        makeDirIfDoesntExist(logdir_path)
-        
-        if not os.path.isfile(logfile_path):
-            try:
-                Path(logfile_path).touch()
-            except Exception as e:
-                print("Could not open logfile. Are you running with root permissions?")
+        makeDirIfDoesntExist(logdir_path)        
+        makeFileIfDoesntExist(logfile_path)
+        writePermissionsCheck(logfile_path)
 
         self.logger = logging.getLogger('client')
         hdlr = logging.FileHandler(logfile_path)
