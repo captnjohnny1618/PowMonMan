@@ -1,10 +1,11 @@
 import sys
 import os
 from pathlib import Path
+import stat
 
 def makeDirIfDoesntExist(dirpath):
     try:
-        os.mkdir(dirpath,mode = 0o644)
+        os.mkdir(dirpath,mode = 0o755)
     except FileExistsError:
         pass
     except Exception as e:
@@ -15,6 +16,7 @@ def makeFileIfDoesntExist(filepath):
     if not os.path.isfile(filepath):
         try:
             Path(filepath).touch()
+            os.chmod(filepath,stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IROTH) # (0644)
         except Exception as e:
             print("Could not open logfile. Are you running with root permissions?")
             print(e)

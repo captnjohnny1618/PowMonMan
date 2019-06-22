@@ -17,7 +17,7 @@ class PowMonManClient:
     udp_port_number = port_number-1
     server_ip = [];
     timer = shutdown_timer()
-    shutdown_time = 10 #600 
+    shutdown_time = 600 
     poll_rate = 5
     
     def __init__(self):
@@ -81,22 +81,22 @@ class PowMonManClient:
             self.logger.info("Could not find a server on the network!")
         else:
             self.logger.info("    Server found at:      {}\n".format(self.server_ip) + 
-                  "    Using port:           {}\n".format(self.port_number) + 
-                  "    Shutdown time (sec):  {}\n".format(self.shutdown_time) + 
-                  "    Current power status: {}".format(self.checkPowerState()))
-            
+                  "               Using port:           {}\n".format(self.port_number) + 
+                  "               Shutdown time (sec):  {}\n".format(self.shutdown_time) + 
+                  "               Current power status: {}".format(self.checkPowerState()))
         power_state      = "on"
         prev_power_state = "on"
 
         while True:
             
             power_state = self.checkPowerState()
-            self.logger.info(power_state)
             
             if (power_state != prev_power_state) and (power_state=="on"):
+                self.logger.info("Server says power is restored. Phew!")
                 self.poll_rate = 5
                 self.timer.stop()
             elif (power_state != prev_power_state) and (power_state=="off"):
+                self.logger.info("Server reporting a power outage!")
                 self.poll_rate = 1
                 self.timer.start()
             elif (power_state == prev_power_state) and (power_state=="off"):
