@@ -45,13 +45,14 @@ class PowMonManServer:
 
     def clientThread(self,conn):
 
-        pin_status = os.path.isfile(self.power_check_file)
-        
-        if pin_status:
-            conn.sendall(bytes("on",'utf-8'))
-        else:
-            conn.sendall(bytes("off",'utf-8'))
-        conn.close()
+        with conn:
+            pin_status = os.path.isfile(self.power_check_file)
+            
+            if pin_status:
+                conn.sendall(bytes("on",'utf-8'))
+            else:
+                conn.sendall(bytes("off",'utf-8'))
+            #conn.close()
 
     def powerCheckThread(self):
         is_running = False
