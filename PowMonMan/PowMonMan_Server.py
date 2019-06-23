@@ -11,7 +11,10 @@ import logging
 class PowMonManServer:
     port_number = 7444
     udp_port_number = port_number-1
-
+    power_check_module  = "RPi"
+    power_check_pin = 4
+    power_check_file = "/var/local/PowMonMan/ON"
+    
     def handleRequests(self):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             try:
@@ -31,30 +34,52 @@ class PowMonManServer:
     
     def udpBroadcastThread(self):
         is_broadcasting = False
-        print("Starting UDP broadcast...")
+        self.logger.info("Starting UDP broadcasts...")        
         while True:
             with udp_broadcaster(self.udp_port_number,"PowMonMan Server!"):
                 pass
             if not is_broadcasting:
                 is_broadcasting = True
-                print("UDP broadcasts: running")
+                self.logger.info("UDP broadcasts running")
             time.sleep(5)
 
     def clientThread(self,conn):
 
-        filepath = "/var/local/PowMonMan/ON"
         pin_status = os.path.isfile(filepath);
         
         if pin_status:
             conn.sendall(bytes("on",'utf-8'))
         else:
             conn.sendall(bytes("off",'utf-8'))
-        conn.close()        
-                
-    def run(self):
-        _thread.start_new_thread(self.udpBroadcastThread,())
-        self.handleRequests()
+        conn.close()
 
+    def powerCheckThread(self):
+        is_running = False
+        self.logger.info("Starting power check thread...")
+        if self.power_check_module == "RPi":
+            import RPi.GPIO as gpio
+            gpio.setmode(g.BCM)
+            gpio.setup(self.power_check_pin, gpio.IN, pull_up_down = gpio.PUD_DOWN)
+            while True:
+                power_is_on = gpio.input(self.power_check_pin)
+                if power_is_on:
+                    makeDirIfDoesntExist(os.path.dirname(self.power_check_file))
+                    makeFileIfDoesntExist(self.power_check_file)
+                else:
+                    os.remove(self.power_check_file)
+
+                if not is_running:
+                    is_running = True
+                    self.logger.info("Power check thread running")
+                    
+                time.sleep(1)
+
+    def run(self):
+        _thread.start_new_thread(self.powerCheckThread,())
+        time.sleep(1)
+        _thread.start_new_thread(self.udpBroadcastThread,())
+
+        self.handleRequests()
 
     def startLogging(self):
         logdir_path = '/var/log/PowMonMan/'
