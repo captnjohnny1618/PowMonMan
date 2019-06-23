@@ -49,7 +49,7 @@ class PowMonManServer:
         
         if pin_status:
             conn.sendall(bytes("on",'utf-8'))
-        else:os
+        else:
             conn.sendall(bytes("off",'utf-8'))
         conn.close()
 
