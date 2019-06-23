@@ -5,8 +5,10 @@ import socket
 # Broadcast on 7443
 # TCP on 7444
 
+udp_timeout = 10
+
 class udp_receiver:
-    def __init__(self, port, msg_leng=8192, timeout=15):
+    def __init__(self, port, msg_leng=8192, timeout=udp_timeout):
         self.sock = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
         self.sock.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
         self.sock.settimeout(timeout)
@@ -17,13 +19,11 @@ class udp_receiver:
         return self
 
     def __next__(self):
-        try:
-            
+        try:            
             data, addr = self.sock.recvfrom(self.msg_leng)
             data = data.decode('utf-8')
             return addr, data
         except Exception as e:
-            print("Exception encountered while executing UDP recv: {}".format(e))
             raise StopIteration
         
     def __enter__(self):

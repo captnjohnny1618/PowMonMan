@@ -19,6 +19,7 @@ class PowMonManClient:
     timer = shutdown_timer()
     shutdown_time = 600 
     poll_rate = 5
+    max_connection_attempts = 5
     
     def __init__(self):
         pass
@@ -26,7 +27,8 @@ class PowMonManClient:
     def listenForServer(self):
         self.logger.info("Listening for PowMonMan server...")
         packets_received = 0
-        with udp_receiver(self.udp_port_number) as ur:
+
+        with udp_receiver(self.udp_port_number) as ur:            
             for (address,data) in ur:
                 address = address[0] # chop off port number
                 if data == "PowMonMan Server!":
@@ -44,6 +46,7 @@ class PowMonManClient:
                           "however this may be incorrect.  Double check server configuration\n" +
                           "if PowMonMan is not functioning correctly.\n")
                     return address
+
         return []
 
     def checkPowerState(self):
@@ -73,17 +76,33 @@ class PowMonManClient:
         call(cmd.split())
         sys.exit(0);
 
+    def attemptServerDiscovery(self):
+        attempts = 0
+        while (attempts < self.max_connection_attempts):
+            attempts+=1
+            self.server_ip = self.listenForServer()
+            if not self.server_ip:
+                self.logger.info("Could not find a server on the network. (Attempt {} of {})".format(attempts,self.max_connection_attempts))
+            else:
+                self.logger.info("    Server found at:      {}\n".format(self.server_ip) + 
+                                 "    Using port:           {}\n".format(self.port_number) + 
+                                 "    Shutdown time (sec):  {}\n".format(self.shutdown_time) + 
+                                 "    Current power status: {}".format(self.checkPowerState()))
+                return True
+
+        return False
+        
     def run(self):
 
         self.logger.info("Starting PowMonMan_Client...")
-        self.server_ip = self.listenForServer()              
-        if not self.server_ip:
-            self.logger.info("Could not find a server on the network!")
-        else:
-            self.logger.info("    Server found at:      {}\n".format(self.server_ip) + 
-                  "               Using port:           {}\n".format(self.port_number) + 
-                  "               Shutdown time (sec):  {}\n".format(self.shutdown_time) + 
-                  "               Current power status: {}".format(self.checkPowerState()))
+
+        server_discovered = self.attemptServerDiscovery()
+        if not server_discovered:
+            self.logger.error("Server does not appear to be running on the network.  Check configuration and try again.")
+            self.logger.info("(Note: if UDP discovery continues to fail, a server IP can be manually configured.)")
+            self.logger.info("Exiting.")
+            sys.exit(1);
+        
         power_state      = "on"
         prev_power_state = "on"
 
@@ -104,6 +123,16 @@ class PowMonManClient:
                     self.sendShutdownSignal()
                 else:
                     self.logger.info("{} seconds until shutdown!".format(round(self.shutdown_time - elapsed)))
+            elif (power_state == prev_power_state) and (power_state=="on"):
+                continue
+            elif power_state=="error connecting":
+                self.logger.error("Lost connection with server!")
+                self.server_ip = []
+                server_rediscovered = self.attemptServerDiscovery()
+                if not server_rediscovered:
+                    self.logger.error("Server appears to have gone down or is not communicating.")
+                    self.logger.info("Exiting.")
+                    sys.exit(1)
 
             prev_power_state = power_state
             time.sleep(self.poll_rate)
@@ -121,7 +150,7 @@ class PowMonManClient:
         formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
         hdlr.setFormatter(formatter)
         self.logger.addHandler(hdlr)
-        self.logger.setLevel(logging.INFO)            
+        self.logger.setLevel(logging.INFO)
 
 def main():
     with daemon.DaemonContext(stdout = sys.stdout, stderr = sys.stderr):
