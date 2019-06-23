@@ -2,7 +2,7 @@ import sys
 import os
 import _thread
 from .udp import udp_broadcaster
-from .filehandling import makeDirIfDoesntExist, makeFileIfDoesntExist, writePermissionsCheck
+from .filehandling import makeDirIfDoesntExist, makeFileIfDoesntExist, writePermissionsCheck, deleteFileIfExists
 import socket
 import daemon
 import time
@@ -49,7 +49,7 @@ class PowMonManServer:
         
         if pin_status:
             conn.sendall(bytes("on",'utf-8'))
-        else:
+        else:os
             conn.sendall(bytes("off",'utf-8'))
         conn.close()
 
@@ -65,8 +65,8 @@ class PowMonManServer:
                 if power_is_on:
                     makeDirIfDoesntExist(os.path.dirname(self.power_check_file))
                     makeFileIfDoesntExist(self.power_check_file)
-                else:
-                    os.remove(self.power_check_file)
+                else:                    
+                    deleteFileIfExists(self.power_check_file)
 
                 if not is_running:
                     is_running = True

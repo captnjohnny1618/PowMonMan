@@ -22,6 +22,16 @@ def makeFileIfDoesntExist(filepath):
             print(e)
             sys.exit(1)
 
+def deleteFileIfExists(filepath):
+    if os.path.isfile(filepath):
+        try:
+            os.remove(filepath)
+        except Exception as e:
+            print("While trying to remove file {}, something went wrong.".format(filepath))
+            print(e)
+            sys.exit(1)
+    
+
 def writePermissionsCheck(filepath):
     try:
         with open(filepath,'w') as f:
