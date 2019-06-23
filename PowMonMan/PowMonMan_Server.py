@@ -73,7 +73,7 @@ class PowMonManServer:
                     is_running = True
                     self.logger.info("Power check thread running")
                     
-                time.sleep(5)
+                time.sleep(1)
 
     def run(self):
         _thread.start_new_thread(self.powerCheckThread,())

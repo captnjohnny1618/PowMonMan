@@ -123,8 +123,6 @@ class PowMonManClient:
                     self.sendShutdownSignal()
                 else:
                     self.logger.info("{} seconds until shutdown!".format(round(self.shutdown_time - elapsed)))
-            elif (power_state == prev_power_state) and (power_state=="on"):
-                continue
             elif power_state=="error connecting":
                 self.logger.error("Lost connection with server!")
                 self.server_ip = []
@@ -133,7 +131,7 @@ class PowMonManClient:
                     self.logger.error("Server appears to have gone down or is not communicating.")
                     self.logger.info("Exiting.")
                     sys.exit(1)
-
+                
             prev_power_state = power_state
             time.sleep(self.poll_rate)
 
