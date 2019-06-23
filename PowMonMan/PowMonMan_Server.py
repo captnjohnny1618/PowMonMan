@@ -58,7 +58,7 @@ class PowMonManServer:
         self.logger.info("Starting power check thread...")
         if self.power_check_module == "RPi":
             import RPi.GPIO as gpio
-            gpio.setmode(g.BCM)
+            gpio.setmode(gpio.BCM)
             gpio.setup(self.power_check_pin, gpio.IN, pull_up_down = gpio.PUD_DOWN)
             while True:
                 power_is_on = gpio.input(self.power_check_pin)
