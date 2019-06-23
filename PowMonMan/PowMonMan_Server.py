@@ -45,7 +45,7 @@ class PowMonManServer:
 
     def clientThread(self,conn):
 
-        pin_status = os.path.isfile(filepath);
+        pin_status = os.path.isfile(self.power_check_file)
         
         if pin_status:
             conn.sendall(bytes("on",'utf-8'))
