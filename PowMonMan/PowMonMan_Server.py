@@ -19,7 +19,6 @@ class PowMonManServer:
     logdir_path = "/var/log/PowMonMan/"
 
     def __init__(self,config):
-        print(config)
         self.port_number        = config['ServerClient']['port_number']
         self.udp_port_number    = config['ServerClient']['udp_port_number']
         self.power_check_module = config['PowerCheck']['module']
