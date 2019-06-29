@@ -13,10 +13,15 @@ import yaml
 #    else:
 #        return os.path.join('PowMonMan','configs','rc.yaml')
     
-def loadConfigurationFile():
-
-    filepath = os.path.join('PowMonMan','configs','rc.yaml') #checkForLocalConfig()
+def loadConfigurationFile(filepath = []):
     
+    if not filepath:
+        if (sys.platform=="linux" or sys.platform=="darwin"):
+            filepath = os.path.join('/','var','local','PowMonMan','rc.yaml') #checkForLocalConfig()
+        elif (sys.platform=="win32"):
+            print("Windows support not yet implemented!")
+            sys.exit(1)
+
     with open(filepath,'r') as f:
         configuration = yaml.load(f, Loader = yaml.FullLoader)
         

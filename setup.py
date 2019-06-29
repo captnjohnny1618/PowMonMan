@@ -3,28 +3,25 @@ import shutil
 import subprocess
 from setuptools import setup, find_packages
 from setuptools.command.install import install as _install
-
+from PowMonMan.filehandling import makeDirIfDoesntExist
 
 class install(_install):
-    linux_mac_path = "/etc/PowMonMan/rc.yaml"
+    linux_mac_dir = "/var/local/PowMonMan"
+    linux_mac_filepath = os.path.join(linux_mac_dir,"rc.yaml")    
     windows_path  = ""
     
     def run(self):
         _install.run(self)
-        print("Installing udev rules...")
-        if not os.path.isdir("/etc/udev/rules.d"):
-            print("WARNING: udev rules have not been installed (/etc/udev/rules.d is not a directory)")
-            return
+        print("Installing config file...")
+        makeDirIfDoesntExist('/var/local/PowMonMan/')
+        if not os.path.isdir(self.linux_mac_dir):
+            print("Could not save configuration file")
+            sys.exit(1);
         try:
-            shutil.copy("./rivalcfg/data/99-steelseries-rival.rules", "/etc/udev/rules.d/")
+            shutil.copy("./PowMonMan/configs/rc.yaml", os.path.join(self.linux_mac_filepath))
         except IOError:
-            print("WARNING: udev rules have not been installed (permission denied)")
-            return
-        try:
-            subprocess.call(["udevadm", "trigger"])
-        except OSError:
-            print("WARNING: unable to update udev rules, please run the 'udevadm trigger' command")
-            return
+            print("WARNING: Configuration file was not installed (likely permissions issues)")
+            sys.exit(1)
         print("Done!")
 
 setup(
@@ -46,13 +43,13 @@ setup(
     
     packages = find_packages(),
 
-    data_files = [('PowMonMan/configs',["PowMonMan/configs/rc.yaml"])],
+    #data_files = [('PowMonMan/configs',["PowMonMan/configs/rc.yaml"])],
 
     entry_points = {
         "console_scripts":[
             "powmonman_server = PowMonMan.PowMonMan_Server:main",
             "powmonman_client = PowMonMan.PowMonMan_Client:main"
         ]
-    },
-
+    },    
+    cmdclass={"install": install}
 )
