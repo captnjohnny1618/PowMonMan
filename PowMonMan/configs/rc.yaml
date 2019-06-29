@@ -1,0 +1,28 @@
+ServerClient:
+  port_number: 7444
+  udp_port_number: 7443
+  server_ip: [] 
+  shutdown_time: 600
+  client_poll_rate: 5
+  max_client_connection_attempts: 5
+
+Platform:
+  win32:
+    shutdown_command: "shutdown /s"
+    log_dir:          ""
+    power_check_file: ""
+  linux:
+    shutdown_command: "sudo shutdown -h now"
+    log_dir:          "/var/log/PowMonMan/"
+    power_check_file: "/var/local/PowMonMan/ON"    
+  darwin:
+    shutdown_command: "sudo shutdown -h now"
+    log_dir:          "/var/log/PowMonMan/"
+    power_check_file: "/var/local/PowMonMan/ON"
+    
+PowerCheck:
+  module: "RPi"
+
+Modules:
+  RPi:
+    status_pin: 4

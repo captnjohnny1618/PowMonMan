@@ -9,7 +9,7 @@ def makeDirIfDoesntExist(dirpath):
     except FileExistsError:
         pass
     except Exception as e:
-        print("Could not make logging directory.  Are you sure you're running with root permissions?")
+        print("Could not make directory ({}).  Are you sure you're running with root permissions?".format(dirpath))
         sys.exit(1)
 
 def makeFileIfDoesntExist(filepath):
@@ -18,7 +18,7 @@ def makeFileIfDoesntExist(filepath):
             Path(filepath).touch()
             os.chmod(filepath,stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IROTH) # (0644)
         except Exception as e:
-            print("Could not open logfile. Are you running with root permissions?")
+            print("Could not open file ({}). Are you running with root permissions?".format(filepath))
             print(e)
             sys.exit(1)
 
