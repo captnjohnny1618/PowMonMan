@@ -1,3 +1,4 @@
+import sys
 import os
 import shutil
 import subprocess
@@ -7,7 +8,7 @@ from PowMonMan.filehandling import makeDirIfDoesntExist
 
 class install(_install):
     linux_mac_dir = "/var/local/PowMonMan"
-    linux_mac_filepath = os.path.join(linux_mac_dir,"rc.yaml")    
+    linux_mac_filepath = os.path.join(linux_mac_dir,"rc.yaml")
     windows_path  = ""
     
     def run(self):
@@ -36,14 +37,11 @@ setup(
     keywords = "power monitor shutdown automated server client powmonman",
     platforms = ["Linux","Windows","MacOS"],
     install_requires = [
-        "python-version>'3.0'",
         "python-daemon>=1",
-        "pyyaml>='5.1'"
+        "pyyaml>=5.1"
     ],
     
     packages = find_packages(),
-
-    #data_files = [('PowMonMan/configs',["PowMonMan/configs/rc.yaml"])],
 
     entry_points = {
         "console_scripts":[

@@ -7,23 +7,33 @@ import socket
 from .timer import shutdown_timer
 from .udp import udp_receiver
 from .filehandling import makeDirIfDoesntExist, makeFileIfDoesntExist, writePermissionsCheck
+from .configure import loadConfigurationFile
 
 from pathlib import Path
 import logging
 
 class PowMonManClient:
 
-    port_number = 7444
-    udp_port_number = port_number-1
-    server_ip = [];
-    timer = shutdown_timer()
-    shutdown_time = 600 
-    poll_rate = 5
+    platform                = sys.platform
+    port_number             = 7444
+    udp_port_number         = port_number-1
+    server_ip               = [];
+    timer                   = shutdown_timer()
+    shutdown_time           = 600 
+    poll_rate               = 5
     max_connection_attempts = 5
     
-    def __init__(self):
-        pass
-    
+    def __init__(self,config):
+        self.port_number        = config['ServerClient']['port_number']
+        self.udp_port_number    = config['ServerClient']['udp_port_number']
+        self.server_ip          = config['ServerClient']['server_ip']
+        self.shutdown_time      = config['ServerClient']['shutdown_time']
+        self.power_check_module = config['PowerCheck']['module']
+        self.poll_rate          = config['ServerClient']['client_poll_rate']
+        self.logdir_path        = config['Platform'][self.platform]['log_dir']
+        self.logfile_path       = os.path.join(self.logdir_path,'client.log')
+        self.max_connection_attempts  = config['ServerClient']['max_client_connection_attempts']
+
     def listenForServer(self):
         self.logger.info("Listening for PowMonMan server...")
         packets_received = 0
@@ -136,23 +146,22 @@ class PowMonManClient:
             time.sleep(self.poll_rate)
 
     def startLogging(self):
-        logdir_path = '/var/log/PowMonMan/'
-        logfile_path = '/var/log/PowMonMan/client.log'
 
-        makeDirIfDoesntExist(logdir_path)        
-        makeFileIfDoesntExist(logfile_path)
-        writePermissionsCheck(logfile_path)
+        makeDirIfDoesntExist(self.logdir_path)        
+        makeFileIfDoesntExist(self.logfile_path)
+        writePermissionsCheck(self.logfile_path)
 
         self.logger = logging.getLogger('client')
-        hdlr = logging.FileHandler(logfile_path)
+        hdlr = logging.FileHandler(self.logfile_path)
         formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
         hdlr.setFormatter(formatter)
         self.logger.addHandler(hdlr)
         self.logger.setLevel(logging.INFO)
 
-def main():
+def main():    
     with daemon.DaemonContext(stdout = sys.stdout, stderr = sys.stderr):
-        P = PowMonManClient();
+        config = loadConfigurationFile();
+        P = PowMonManClient(config);
         P.startLogging()        
         P.run()
 

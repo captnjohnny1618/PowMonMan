@@ -10,13 +10,13 @@ import time
 import logging
 
 class PowMonManServer:
-    platform = sys.platform
-    port_number = 7444
-    udp_port_number = port_number-1
-    power_check_module  = "RPi"
-    power_check_pin = 4
-    power_check_file = "/var/local/PowMonMan/ON"
-    logdir_path = "/var/log/PowMonMan/"
+    platform           = sys.platform
+    port_number        = 7444
+    udp_port_number    = port_number-1
+    power_check_module = "RPi"
+    power_check_pin    = 4
+    power_check_file   = "/var/local/PowMonMan/ON"
+    logdir_path        = "/var/log/PowMonMan/"
 
     def __init__(self,config):
         self.port_number        = config['ServerClient']['port_number']
