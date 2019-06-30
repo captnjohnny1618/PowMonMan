@@ -57,7 +57,7 @@ if os.path.isfile('/sys/firmware/devicetree/base/model'):
     with open('/sys/firmware/devicetree/base/model','r') as f:
         s = f.read();
         if "Raspberry Pi" in s:
-            dependencies.append("RPi.GPIO>=0.6")
+            dependencies.append("RPi.GPIO>=0.6.6")
 
 setup(
     name = "PowMonMan",
