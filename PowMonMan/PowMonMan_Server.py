@@ -4,10 +4,13 @@ import _thread
 from .udp import udp_broadcaster
 from .filehandling import makeDirIfDoesntExist, makeFileIfDoesntExist, writePermissionsCheck, deleteFileIfExists
 from .configure import loadConfigurationFile
+import datetime
 import socket
 import daemon
 import time
 import logging
+from logging.handlers import TimedRotatingFileHandler
+import shutil
 
 class PowMonManServer:
     platform           = sys.platform
@@ -23,7 +26,7 @@ class PowMonManServer:
         self.udp_port_number    = config['ServerClient']['udp_port_number']
         self.power_check_module = config['PowerCheck']['module']
         self.power_check_file   = config['Platform'][self.platform]['power_check_file']
-        self.power_check_pin    = config['Modules']['RPi']['status']
+        self.power_check_pin    = config['Modules']['RPi']['status_pin']
         self.logdir_path        = config['Platform'][self.platform]['log_dir']
         self.logfile_path       = os.path.join(self.logdir_path,'server.log')
         
@@ -56,10 +59,8 @@ class PowMonManServer:
             time.sleep(5)
 
     def clientThread(self,conn):
-
         with conn:
-            pin_status = os.path.isfile(self.power_check_file)
-            
+            pin_status = os.path.isfile(self.power_check_file)            
             if pin_status:
                 conn.sendall(bytes("on",'utf-8'))
             else:
@@ -83,14 +84,12 @@ class PowMonManServer:
                 if not is_running:
                     is_running = True
                     self.logger.info("Power check thread running")
-                    
                 time.sleep(1)
 
     def run(self):
         _thread.start_new_thread(self.powerCheckThread,())
         time.sleep(1)
         _thread.start_new_thread(self.udpBroadcastThread,())
-
         self.handleRequests()
 
     def startLogging(self):
@@ -99,9 +98,11 @@ class PowMonManServer:
         writePermissionsCheck(self.logfile_path)
 
         self.logger = logging.getLogger('server')
-        hdlr = logging.FileHandler(self.logfile_path)
+        #hdlr = logging.FileHandler(self.logfile_path)
+        hdlr = TimedRotatingFileHandler(self.logfile_path,when='midnight',interval=1,backupCount=7)
         formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
         hdlr.setFormatter(formatter)
+        hdlr.suffix = "%Y%m%d"
         self.logger.addHandler(hdlr)
         self.logger.setLevel(logging.INFO)
 

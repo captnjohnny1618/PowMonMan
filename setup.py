@@ -46,6 +46,19 @@ class install(_install):
             sys.exit(1)
         print("Done!")
 
+
+# Detect the platform and configure dependencies if we're running on RPi
+dependencies = [
+    "python-daemon>=1",
+    "pyyaml>=5.1"
+]
+
+if os.path.isfile('/sys/firmware/devicetree/base/model'):
+    with open('/sys/firmware/devicetree/base/model','r') as f:
+        s = f.read();
+        if "Raspberry Pi" in s:
+            dependencies.append("RPi.GPIO>=0.6.6")
+
 setup(
     name = "PowMonMan",
     version = "0.0.1",
@@ -57,11 +70,7 @@ setup(
     author = "John Hoffman",
     keywords = "power monitor shutdown automated server client powmonman",
     platforms = ["Linux","Windows","MacOS"],
-    install_requires = [
-        "python-daemon>=1",
-        "pyyaml>=5.1",
-        "RPi.GPIO>=0.6"
-    ],
+    install_requires = dependencies,
     
     packages = find_packages(),
 
