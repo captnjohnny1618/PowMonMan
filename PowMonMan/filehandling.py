@@ -5,7 +5,7 @@ import stat
 
 def makeDirIfDoesntExist(dirpath):
     try:
-        os.mkdir(dirpath,mode = 0o755)
+        os.makedirs(dirpath,mode = 0o755,exist_ok=True)
     except FileExistsError:
         pass
     except Exception as e:

@@ -6,20 +6,41 @@ from setuptools import setup, find_packages
 from setuptools.command.install import install as _install
 from PowMonMan.filehandling import makeDirIfDoesntExist
 
+# Manually install the configuration files.  Unfortunately we have
+# found too much inconsistency with how setuptools installs data_files
+# or package files to rely on it as an adequate cross platform solution.
 class install(_install):
     linux_mac_dir = "/var/local/PowMonMan"
     linux_mac_filepath = os.path.join(linux_mac_dir,"rc.yaml")
-    windows_path  = ""
+    windows_dir  = ""
+    windows_filepath = ""
     
     def run(self):
         _install.run(self)
         print("Installing config file...")
-        makeDirIfDoesntExist('/var/local/PowMonMan/')
-        if not os.path.isdir(self.linux_mac_dir):
+
+        if ((sys.platform=="linux") or (sys.platform=="darwin")):
+            dirpath  = self.linux_mac_dir
+            filepath = self.linux_mac_filepath
+        elif (sys.platform == "win32"):
+            dirpath  = self.windows_dir
+            filepath = self.windows_filepath
+            print("Windows support is coming soon however not available just yet!")
+            sys.exit(1)
+        else:
+            print("Looks like you're trying to install on an unsupported system!")
+            print("We're defaulting to linux and mac path structures, but there's ")
+            print("a good chance this won't work!  Consider requesting support for your")
+            print("OS at https://github.com/captnjohnny1618/PowMonMan/issues. ")
+            dirpath = linux_mac_dir
+            filepath = linux_mac_filepath
+            
+        makeDirIfDoesntExist(dirpath)
+        if not os.path.isdir(dirpath):
             print("Could not save configuration file")
             sys.exit(1);
         try:
-            shutil.copy("./PowMonMan/configs/rc.yaml", os.path.join(self.linux_mac_filepath))
+            shutil.copy("./PowMonMan/configs/rc.yaml", filepath)
         except IOError:
             print("WARNING: Configuration file was not installed (likely permissions issues)")
             sys.exit(1)
