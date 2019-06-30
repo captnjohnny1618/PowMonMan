@@ -26,7 +26,7 @@ class PowMonManServer:
         self.udp_port_number    = config['ServerClient']['udp_port_number']
         self.power_check_module = config['PowerCheck']['module']
         self.power_check_file   = config['Platform'][self.platform]['power_check_file']
-        self.power_check_pin    = config['Modules']['RPi']['status']
+        self.power_check_pin    = config['Modules']['RPi']['status_pin']
         self.logdir_path        = config['Platform'][self.platform]['log_dir']
         self.logfile_path       = os.path.join(self.logdir_path,'server.log')
         

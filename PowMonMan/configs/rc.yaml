@@ -4,7 +4,7 @@ ServerClient:
   server_ip: [] 
   shutdown_time: 600
   client_poll_rate: 5
-  max_client_connection_attempts: 5
+  max_client_connection_attempts: 100
 
 Platform:
   win32:
