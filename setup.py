@@ -59,7 +59,8 @@ setup(
     platforms = ["Linux","Windows","MacOS"],
     install_requires = [
         "python-daemon>=1",
-        "pyyaml>=5.1"
+        "pyyaml>=5.1",
+        "RPi.GPIO>=0.6"
     ],
     
     packages = find_packages(),
