@@ -9,6 +9,7 @@ import socket
 import daemon
 import time
 import logging
+from logging.handlers import TimedRotatingFileHandler
 import shutil
 
 class PowMonManServer:
@@ -98,7 +99,7 @@ class PowMonManServer:
 
         self.logger = logging.getLogger('server')
         #hdlr = logging.FileHandler(self.logfile_path)
-        hdlr = logging.handlers.TimedRotatingFileHandler(self.logfile_path,when='midnight',interval=1,backupCount=7)
+        hdlr = TimedRotatingFileHandler(self.logfile_path,when='midnight',interval=1,backupCount=7)
         formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
         hdlr.setFormatter(formatter)
         hdlr.suffix = "%Y%m%d"
